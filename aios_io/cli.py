@@ -1,10 +1,12 @@
 """Simple command-line interface for AIOS IO."""
 import argparse
+import asyncio
 
 from .cluster import Cluster
 from .node import Node
 from .scheduler import Scheduler
 from .task import Task
+from .pulsenet import PulseNet
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -33,12 +35,39 @@ def build_parser() -> argparse.ArgumentParser:
     load.add_argument("path")
 
     demo = sub.add_parser("demo", help="Run a demo cycle")
+
+    reg = sub.add_parser("register-peer", help="Register a PulseNet peer")
+    reg.add_argument("name")
+    reg.add_argument("host")
+    reg.add_argument("port", type=int)
+
+    start = sub.add_parser("start-server", help="Start a PulseNet server")
+    start.add_argument("host")
+    start.add_argument("port", type=int)
+
+    send = sub.add_parser("send", help="Send a message to a peer")
+    send.add_argument("name")
+    send.add_argument("message")
+
     return parser
 
 
 def main(argv=None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    pulsenet = PulseNet()
+
+    if args.command == "register-peer":
+        pulsenet.register_peer(args.name, args.host, args.port)
+        print(f"Registered peer {args.name} at {args.host}:{args.port}")
+        return
+    elif args.command == "start-server":
+        asyncio.run(pulsenet.start_server(args.host, args.port, print))
+        return
+    elif args.command == "send":
+        asyncio.run(pulsenet.send(args.name, args.message))
+        return
 
     if args.command == "load-cluster":
         cluster = Cluster.load(args.path)

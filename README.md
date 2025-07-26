@@ -23,6 +23,11 @@ python -m aios_io.cli load-cluster cluster.json
 
 # run a simple demo cycle
 python -m aios_io.cli demo mycluster
+
+# PulseNet networking demo
+python -m aios_io.cli start-server 127.0.0.1 9000 &
+python -m aios_io.cli register-peer local 127.0.0.1 9000
+python -m aios_io.cli send local "hello"
 ```
 
 This implementation is intentionally lightweight and serves as a starting point for further development.
