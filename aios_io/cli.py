@@ -49,6 +49,9 @@ def build_parser() -> argparse.ArgumentParser:
     send.add_argument("name")
     send.add_argument("message")
 
+    digest_cmd = sub.add_parser("show-digest", help="Show node digest logs")
+    digest_cmd.add_argument("cluster")
+
     return parser
 
 
@@ -105,6 +108,11 @@ def main(argv=None) -> None:
             if task:
                 cluster.schedule_task(task)
         cluster.run_all()
+    elif args.command == "show-digest":
+        for node in cluster.nodes.values():
+            print(f"== {node.node_id} ==")
+            for entry in node.digest.read():
+                print(entry)
 
 
 if __name__ == "__main__":

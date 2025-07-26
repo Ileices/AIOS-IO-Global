@@ -8,6 +8,8 @@ This repository contains an experimental prototype for the **AIOS IO** project. 
 - Simplified Trifecta scheduler with red/blue/yellow phases
 - Placeholder PulseNet communication layer
 - Basic command-line interface
+- Digest logging for executed tasks
+- Toy RBY color encoder for data
 - Task scheduling demo showing R/B/Y phases
 
 ## Usage
@@ -28,6 +30,15 @@ python -m aios_io.cli demo mycluster
 python -m aios_io.cli start-server 127.0.0.1 9000 &
 python -m aios_io.cli register-peer local 127.0.0.1 9000
 python -m aios_io.cli send local "hello"
+
+# show digest logs for a cluster
+python -m aios_io.cli show-digest mycluster
+
+# encode a string into RBY colors
+python - <<'PY'
+from aios_io.seed import encode
+print(encode(b"hello"))
+PY
 ```
 
 This implementation is intentionally lightweight and serves as a starting point for further development.

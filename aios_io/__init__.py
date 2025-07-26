@@ -2,3 +2,6 @@
 
 __version__ = "0.1.0"
 
+from .digest import Digest
+from .seed import encode, decode
+

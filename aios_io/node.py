@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Any
 
 from .task import Task
+from .digest import Digest
 
 @dataclass
 class Node:
@@ -13,6 +14,7 @@ class Node:
     ram_gb: int = 0
     metadata: Dict[str, str] = field(default_factory=dict)
     tasks: List[Task] = field(default_factory=list)
+    digest: Digest = field(default_factory=Digest)
 
     def info(self) -> str:
         return (
@@ -28,6 +30,7 @@ class Node:
         """Execute and clear all assigned tasks."""
         for task in list(self.tasks):
             task.run()
+            self.digest.log(f"{self.node_id}:{task.name}")
         self.tasks.clear()
 
     # New functionality for persistence
