@@ -13,8 +13,15 @@ This repository contains an experimental prototype for the **AIOS IO** project. 
 ## Usage
 
 ```bash
+# add a node and list cluster state
 python -m aios_io.cli add-node mycluster node1 4 --gpu 1 --ram 8
 python -m aios_io.cli list-nodes mycluster
+
+# save and later load the cluster
+python -m aios_io.cli save-cluster mycluster cluster.json
+python -m aios_io.cli load-cluster cluster.json
+
+# run a simple demo cycle
 python -m aios_io.cli demo mycluster
 ```
 
