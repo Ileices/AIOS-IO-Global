@@ -42,3 +42,15 @@ PY
 ```
 
 This implementation is intentionally lightweight and serves as a starting point for further development.
+
+### Dataset Builder
+
+The repository now includes `scripts/json_to_aios_dataset_wizard.py`, a full
+wizard for converting large chat exports into trainable datasets. Run the script
+directly and follow the prompts or pass `--noninteractive` with a saved config.
+
+### Per-node Digests
+
+Each `Node` writes its task history to a unique log file named
+`digest_<node_id>.log`. Use the `show-digest` CLI command to view logs for a
+cluster.

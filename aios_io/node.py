@@ -1,20 +1,28 @@
 """Basic node representation for AIOS IO."""
+
 from dataclasses import dataclass, field
 from typing import Dict, List, Any
 
 from .task import Task
 from .digest import Digest
 
+
 @dataclass
 class Node:
     """Represents a compute node in the system."""
+
     node_id: str
     cpu_cores: int
     gpu_cores: int = 0
     ram_gb: int = 0
     metadata: Dict[str, str] = field(default_factory=dict)
     tasks: List[Task] = field(default_factory=list)
-    digest: Digest = field(default_factory=Digest)
+    digest_path: str | None = None
+    digest: Digest = field(init=False)
+
+    def __post_init__(self) -> None:
+        path = self.digest_path or f"digest_{self.node_id}.log"
+        self.digest = Digest(path)
 
     def info(self) -> str:
         return (
@@ -42,6 +50,7 @@ class Node:
             "gpu_cores": self.gpu_cores,
             "ram_gb": self.ram_gb,
             "metadata": self.metadata,
+            "digest_path": str(self.digest.path),
         }
 
     @classmethod
@@ -53,4 +62,5 @@ class Node:
             data.get("gpu_cores", 0),
             data.get("ram_gb", 0),
             data.get("metadata", {}),
+            data.get("digest_path"),
         )
