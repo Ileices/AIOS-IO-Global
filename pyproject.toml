@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aios_io"
+version = "0.1.0"
+description = "Experimental prototype for AIOS IO Global HPC"
+readme = "README.md"
+authors = [{name="AIOS IO"}]
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aios_io*"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
