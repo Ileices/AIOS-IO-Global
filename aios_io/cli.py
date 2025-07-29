@@ -1,4 +1,5 @@
 """Simple command-line interface for AIOS IO."""
+
 import argparse
 import asyncio
 
@@ -35,6 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
     load.add_argument("path")
 
     demo = sub.add_parser("demo", help="Run a demo cycle")
+    demo.add_argument("cluster")
 
     reg = sub.add_parser("register-peer", help="Register a PulseNet peer")
     reg.add_argument("name")
