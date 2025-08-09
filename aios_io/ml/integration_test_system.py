@@ -63,7 +63,7 @@ try:
     from consciousness_compression_engine import DistributedConsciousnessStorage, FractalConsciousnessEncoder
     from topology_manager import TopologyManager
     from ic_ae_mutator import MutationEngine, ICManifest
-    from rby_core_engine import RBYQuantumProcessor, RBYState
+from .rby_core_engine import RBYQuantumProcessor, RBYState
     from neural_fractal_kernels import FractalActivationFunction, FractalNode
 except ImportError as e:
     print(f"Import error: {e}")
