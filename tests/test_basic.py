@@ -29,4 +29,6 @@ def test_node_digest_logging(tmp_path):
     task = Task("work", "R", lambda: None)
     node.assign_task(task)
     node.run_tasks()
-    assert digest_file.read_text().strip() == "n2:work"
+    entries = node.digest.read()
+    assert entries[0]["node"] == "n2"
+    assert entries[0]["task"] == "work"

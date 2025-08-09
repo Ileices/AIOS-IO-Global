@@ -51,6 +51,9 @@ def build_parser() -> argparse.ArgumentParser:
     send.add_argument("name")
     send.add_argument("message")
 
+    broadcast = sub.add_parser("broadcast", help="Send a message to all peers")
+    broadcast.add_argument("message")
+
     digest_cmd = sub.add_parser("show-digest", help="Show node digest logs")
     digest_cmd.add_argument("cluster")
 
@@ -68,10 +71,14 @@ def main(argv=None) -> None:
         print(f"Registered peer {args.name} at {args.host}:{args.port}")
         return
     elif args.command == "start-server":
-        asyncio.run(pulsenet.start_server(args.host, args.port, print))
+        pulsenet.register_handler("message", lambda m: print(f"received: {m}"))
+        asyncio.run(pulsenet.start_server(args.host, args.port))
         return
     elif args.command == "send":
-        asyncio.run(pulsenet.send(args.name, args.message))
+        asyncio.run(pulsenet.send(args.name, "message", args.message))
+        return
+    elif args.command == "broadcast":
+        asyncio.run(pulsenet.broadcast("message", args.message))
         return
 
     if args.command == "load-cluster":
@@ -114,7 +121,9 @@ def main(argv=None) -> None:
         for node in cluster.nodes.values():
             print(f"== {node.node_id} ==")
             for entry in node.digest.read():
-                print(entry)
+                ts = entry.get("timestamp")
+                task = entry.get("task")
+                print(f"{ts}: {task}")
 
 
 if __name__ == "__main__":
