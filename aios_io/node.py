@@ -1,7 +1,8 @@
 """Basic node representation for AIOS IO."""
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+import time
 
 from .task import Task
 from .digest import Digest
@@ -38,7 +39,9 @@ class Node:
         """Execute and clear all assigned tasks."""
         for task in list(self.tasks):
             task.run()
-            self.digest.log(f"{self.node_id}:{task.name}")
+            self.digest.log(
+                {"node": self.node_id, "task": task.name, "timestamp": time.time()}
+            )
         self.tasks.clear()
 
     # New functionality for persistence

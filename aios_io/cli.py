@@ -121,7 +121,9 @@ def main(argv=None) -> None:
         for node in cluster.nodes.values():
             print(f"== {node.node_id} ==")
             for entry in node.digest.read():
-                print(entry)
+                ts = entry.get("timestamp")
+                task = entry.get("task")
+                print(f"{ts}: {task}")
 
 
 if __name__ == "__main__":

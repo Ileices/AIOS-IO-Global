@@ -1,21 +1,28 @@
-"""Simple digest logger for task results."""
+"""Structured JSON-lines digest logger for task results."""
 from __future__ import annotations
 
+import json
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 
 
 class Digest:
-    """Logs executed tasks to a file."""
+    """Logs executed tasks to a JSON-lines file."""
 
     def __init__(self, path: str = "digest.log") -> None:
         self.path = Path(path)
 
-    def log(self, entry: str) -> None:
-        with self.path.open("a", encoding="utf-8") as f:
-            f.write(entry + "\n")
+    def log(self, entry: Dict[str, object]) -> None:
+        """Append a JSON serializable ``entry`` to the digest file."""
 
-    def read(self) -> List[str]:
+        with self.path.open("a", encoding="utf-8") as f:
+            json.dump(entry, f)
+            f.write("\n")
+
+    def read(self) -> List[Dict[str, object]]:
+        """Return all log entries as dictionaries."""
+
         if not self.path.exists():
             return []
-        return self.path.read_text(encoding="utf-8").splitlines()
+        lines = self.path.read_text(encoding="utf-8").splitlines()
+        return [json.loads(line) for line in lines if line]
