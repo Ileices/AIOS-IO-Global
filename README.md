@@ -11,6 +11,7 @@ This repository contains an experimental prototype for the **AIOS IO** project. 
 - Digest logging for executed tasks
 - Toy RBY color encoder for data
 - Task scheduling demo showing R/B/Y phases
+- Experimental machine-learning algorithms under `aios_io.ml`
 
 ## Usage
 
@@ -31,7 +32,7 @@ python -m aios_io.cli start-server 127.0.0.1 9000 &
 python -m aios_io.cli register-peer local 127.0.0.1 9000
 python -m aios_io.cli send local "hello"
 
-# show digest logs for a cluster
+# show digest logs for a cluster (JSON lines with timestamps)
 python -m aios_io.cli show-digest mycluster
 
 # encode a string into RBY colors
@@ -51,6 +52,6 @@ directly and follow the prompts or pass `--noninteractive` with a saved config.
 
 ### Per-node Digests
 
-Each `Node` writes its task history to a unique log file named
+Each `Node` writes its task history to a unique JSON-lines log file named
 `digest_<node_id>.log`. Use the `show-digest` CLI command to view logs for a
 cluster.

@@ -23,7 +23,7 @@ from pathlib import Path
 try:
     from ic_ae_mathematical_foundation import ICConsciousnessEngine, RBYVector
     from quantum_consciousness_bridge_v2 import QuantumConsciousnessProcessor
-    from rby_core_engine import RBYConsciousnessOrchestrator, RBYState
+    from .rby_core_engine import RBYConsciousnessOrchestrator, RBYState
     MODULES_AVAILABLE = True
 except ImportError as e:
     print(f"⚠️  Module import failed: {e}")
