@@ -11,6 +11,7 @@ This repository contains an experimental prototype for the **AIOS IO** project. 
 - Digest logging for executed tasks
 - Toy RBY color encoder for data
 - Task scheduling demo showing R/B/Y phases
+- Experimental machine-learning algorithms under `aios_io.ml`
 
 ## Usage
 
