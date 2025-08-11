@@ -5,10 +5,10 @@ This repository contains an experimental prototype for the **AIOS IO** project. 
 ## Features
 
 - Minimal representation of compute nodes and clusters
-- Simplified Trifecta scheduler with red/blue/yellow phases
+- Priority-aware Trifecta scheduler with red/blue/yellow phases
 - Placeholder PulseNet communication layer
 - Basic command-line interface
-- Digest logging for executed tasks
+- Digest logging for executed tasks including resource metrics
 - Toy RBY color encoder for data
 - Task scheduling demo showing R/B/Y phases
 - Experimental machine-learning algorithms under `aios_io.ml`

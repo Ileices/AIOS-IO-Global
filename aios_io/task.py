@@ -5,11 +5,12 @@ from typing import Callable
 
 @dataclass
 class Task:
-    """Represents a unit of work with a phase and callable."""
+    """Represents a unit of work with a phase, callable, and priority."""
 
     name: str
     phase: str
     action: Callable[[], None]
+    priority: int = 0
 
     def run(self) -> None:
         """Execute the task's action."""
