@@ -15,7 +15,7 @@ from typing import Dict, Any, List
 try:
     from ic_ae_mathematical_foundation import ICConsciousnessEngine
     from quantum_consciousness_bridge_v2 import QuantumConsciousnessProcessor
-    from rby_core_engine import RBYConsciousnessOrchestrator
+    from .rby_core_engine import RBYConsciousnessOrchestrator
     
     print("✅ All core modules imported successfully")
     MODULES_AVAILABLE = True

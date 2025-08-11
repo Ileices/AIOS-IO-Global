@@ -1,33 +1,36 @@
-"""Simplified Trifecta scheduler."""
-from collections import deque
-from typing import Deque, Optional
+"""Simplified Trifecta scheduler with priority support."""
+import heapq
+import itertools
+from typing import List, Optional, Tuple
 
 from .task import Task
 
 
 class Scheduler:
-    """Schedules tasks in three separate queues."""
+    """Schedules tasks in three priority queues."""
 
     def __init__(self) -> None:
-        self.red_queue: Deque[Task] = deque()
-        self.blue_queue: Deque[Task] = deque()
-        self.yellow_queue: Deque[Task] = deque()
+        self._counter = itertools.count()
+        self.red_queue: List[Tuple[int, int, Task]] = []
+        self.blue_queue: List[Tuple[int, int, Task]] = []
+        self.yellow_queue: List[Tuple[int, int, Task]] = []
 
     def add_task(self, task: Task) -> None:
+        item = (task.priority, next(self._counter), task)
         if task.phase == "R":
-            self.red_queue.append(task)
+            heapq.heappush(self.red_queue, item)
         elif task.phase == "B":
-            self.blue_queue.append(task)
+            heapq.heappush(self.blue_queue, item)
         elif task.phase == "Y":
-            self.yellow_queue.append(task)
+            heapq.heappush(self.yellow_queue, item)
         else:
             raise ValueError("Phase must be R, B, or Y")
 
     def run_next(self, phase: str) -> Optional[Task]:
         if phase == "R" and self.red_queue:
-            return self.red_queue.popleft()
+            return heapq.heappop(self.red_queue)[2]
         if phase == "B" and self.blue_queue:
-            return self.blue_queue.popleft()
+            return heapq.heappop(self.blue_queue)[2]
         if phase == "Y" and self.yellow_queue:
-            return self.yellow_queue.popleft()
+            return heapq.heappop(self.yellow_queue)[2]
         return None

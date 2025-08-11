@@ -19,13 +19,13 @@ import uuid
 from enum import Enum
 
 # Import all subsystems
-from rby_core_engine import RBYConsciousnessOrchestrator, RBYState
-from twmrto_compression import TwmrtoMasterCompressor
-from neural_fractal_kernels import ICAAEProcessor
-from distributed_consciousness import GlobalConsciousnessOrchestrator, ConsciousnessLevel
-from nlp_to_code_engine import ConsciousnessCodeGenerator, CodeGenerationRequest
-from self_modifying_code import SelfModifyingCodeSystem
-from hardware_optimization import HardwareOptimizationMaster
+from .rby_core_engine import RBYConsciousnessOrchestrator, RBYState
+from .twmrto_compression import TwmrtoMasterCompressor
+from .neural_fractal_kernels import ICAAEProcessor
+from .distributed_consciousness import GlobalConsciousnessOrchestrator, ConsciousnessLevel
+from .nlp_to_code_engine import ConsciousnessCodeGenerator, CodeGenerationRequest
+from .self_modifying_code import SelfModifyingCodeSystem
+from .hardware_optimization import HardwareOptimizationMaster
 
 
 class SystemStatus(Enum):

@@ -73,7 +73,7 @@ import subprocess
 
 # Import our consciousness systems
 try:
-    from rby_core_engine import RBYConsciousnessEngine
+    from .rby_core_engine import RBYConsciousnessEngine
     from global_consciousness_orchestrator import GlobalConsciousnessOrchestrator
     from hardware_optimization_kernels import HardwareOptimizationMaster
     from self_modifying_code import SelfModifyingExecutor
