@@ -12,7 +12,6 @@ This repository contains an experimental prototype for the **AIOS IO** project. 
 - Toy RBY color encoder for data
 - Task scheduling demo showing R/B/Y phases
 - Experimental machine-learning algorithms under `aios_io.ml`
-- Nodes track CPU and memory usage with heartbeat monitoring
 
 ## Usage
 

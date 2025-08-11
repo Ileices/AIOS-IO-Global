@@ -43,9 +43,11 @@ def test_node_digest_logging(tmp_path):
     assert entries[0]["task"] == "work"
 
 
+
 def test_node_heartbeat_and_usage():
     node = Node("n3", 1)
     node.heartbeat()
     assert node.is_alive()
     usage = node.resource_usage()
     assert "cpu" in usage and "memory" in usage
+
