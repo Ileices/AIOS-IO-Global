@@ -7,6 +7,7 @@ from aios_io.cluster import Cluster
 from aios_io.node import Node
 from aios_io.task import Task
 from aios_io.scheduler import Scheduler
+from aios_io.orchestrator import Orchestrator
 
 
 def test_cluster_add_and_list():
@@ -23,10 +24,43 @@ def test_scheduler_runs_tasks():
     assert sched.run_next("R") is task
 
 
+def test_scheduler_respects_priority():
+    sched = Scheduler()
+    low = Task("low", "R", lambda: None, priority=10)
+    high = Task("high", "R", lambda: None, priority=1)
+    sched.add_task(low)
+    sched.add_task(high)
+    assert sched.run_next("R") is high
+
+
 def test_node_digest_logging(tmp_path):
     digest_file = tmp_path / "log.txt"
     node = Node("n2", 1, digest_path=str(digest_file))
     task = Task("work", "R", lambda: None)
     node.assign_task(task)
     node.run_tasks()
-    assert digest_file.read_text().strip() == "n2:work"
+    entries = node.digest.read()
+    assert entries[0]["node"] == "n2"
+    assert entries[0]["task"] == "work"
+
+
+def test_node_heartbeat_and_usage():
+    node = Node("n3", 1)
+    node.heartbeat()
+    assert node.is_alive()
+    usage = node.resource_usage()
+    assert "cpu" in usage and "memory" in usage
+
+
+def test_orchestrator_runs_cycle():
+    cluster = Cluster("c2")
+    cluster.add_node(Node("n1", 1))
+    cluster.add_node(Node("n2", 1))
+    scheduler = Scheduler()
+    result: list[str] = []
+    scheduler.add_task(Task("a", "R", lambda: result.append("a")))
+    scheduler.add_task(Task("b", "B", lambda: result.append("b")))
+    scheduler.add_task(Task("c", "Y", lambda: result.append("c")))
+    orch = Orchestrator(cluster, scheduler)
+    orch.cycle()
+    assert result == ["a", "b", "c"]

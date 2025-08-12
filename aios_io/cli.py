@@ -38,6 +38,9 @@ def build_parser() -> argparse.ArgumentParser:
     demo = sub.add_parser("demo", help="Run a demo cycle")
     demo.add_argument("cluster")
 
+    orch = sub.add_parser("orchestrate", help="Run tasks through the orchestrator")
+    orch.add_argument("cluster")
+
     reg = sub.add_parser("register-peer", help="Register a PulseNet peer")
     reg.add_argument("name")
     reg.add_argument("host")
@@ -50,6 +53,9 @@ def build_parser() -> argparse.ArgumentParser:
     send = sub.add_parser("send", help="Send a message to a peer")
     send.add_argument("name")
     send.add_argument("message")
+
+    broadcast = sub.add_parser("broadcast", help="Send a message to all peers")
+    broadcast.add_argument("message")
 
     digest_cmd = sub.add_parser("show-digest", help="Show node digest logs")
     digest_cmd.add_argument("cluster")
@@ -68,10 +74,17 @@ def main(argv=None) -> None:
         print(f"Registered peer {args.name} at {args.host}:{args.port}")
         return
     elif args.command == "start-server":
-        asyncio.run(pulsenet.start_server(args.host, args.port, print))
+        async def _print(msg: str) -> None:
+            print(f"received: {msg}")
+
+        pulsenet.register_handler("message", _print)
+        asyncio.run(pulsenet.start_server(args.host, args.port))
         return
     elif args.command == "send":
-        asyncio.run(pulsenet.send(args.name, args.message))
+        asyncio.run(pulsenet.send(args.name, "message", args.message))
+        return
+    elif args.command == "broadcast":
+        asyncio.run(pulsenet.broadcast("message", args.message))
         return
 
     if args.command == "load-cluster":
@@ -110,11 +123,23 @@ def main(argv=None) -> None:
             if task:
                 cluster.schedule_task(task)
         cluster.run_all()
+    elif args.command == "orchestrate":
+        cluster.add_node(Node("n1", 4))
+        cluster.add_node(Node("n2", 2))
+        scheduler = Scheduler()
+        scheduler.add_task(Task("collect", "R", lambda: print("collecting data")))
+        scheduler.add_task(Task("train", "B", lambda: print("training model")))
+        scheduler.add_task(Task("deploy", "Y", lambda: print("deploying service")))
+        from .orchestrator import Orchestrator
+
+        Orchestrator(cluster, scheduler, pulsenet).cycle()
     elif args.command == "show-digest":
         for node in cluster.nodes.values():
             print(f"== {node.node_id} ==")
             for entry in node.digest.read():
-                print(entry)
+                ts = entry.get("timestamp")
+                task = entry.get("task")
+                print(f"{ts}: {task}")
 
 
 if __name__ == "__main__":
