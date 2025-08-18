@@ -7,7 +7,7 @@ This repository contains an experimental prototype for the **AIOS IO** project. 
 - Minimal representation of compute nodes and clusters
 - Priority-aware Trifecta scheduler with red/blue/yellow phases
 - Asynchronous PulseNet message bus with peer registry and broadcast
-- Basic command-line interface
+- Command-line interface for cluster management and demos
 - Digest logging for executed tasks including resource metrics
 - Configurable, reversible RBY color encoder for data
 - Task scheduling demo showing R/B/Y phases
