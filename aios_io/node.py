@@ -42,6 +42,7 @@ class Node:
         """Execute and clear all assigned tasks."""
         for task in list(self.tasks):
             task.run()
+
             entry = {
                 "node": self.node_id,
                 "task": task.name,
@@ -50,7 +51,8 @@ class Node:
             }
             self.digest.log(entry)
             self.heartbeat()
-        self.tasks.clear()
+
+            self.tasks.clear()
 
     def cancel_task(self, name: str) -> bool:
         """Cancel a pending task by name."""

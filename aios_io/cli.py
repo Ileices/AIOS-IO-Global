@@ -74,10 +74,7 @@ def main(argv=None) -> None:
         print(f"Registered peer {args.name} at {args.host}:{args.port}")
         return
     elif args.command == "start-server":
-        async def _print(msg: str) -> None:
-            print(f"received: {msg}")
 
-        pulsenet.register_handler("message", _print)
         asyncio.run(pulsenet.start_server(args.host, args.port))
         return
     elif args.command == "send":

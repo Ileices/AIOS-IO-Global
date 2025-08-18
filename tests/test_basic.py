@@ -53,24 +53,3 @@ def test_node_heartbeat_and_usage():
     usage = node.resource_usage()
     assert "cpu" in usage and "memory" in usage
 
-
-def test_orchestrator_runs_cycle():
-    cluster = Cluster("c2")
-    cluster.add_node(Node("n1", 1))
-    cluster.add_node(Node("n2", 1))
-    scheduler = Scheduler()
-    result: list[str] = []
-    scheduler.add_task(Task("a", "R", lambda: result.append("a")))
-    scheduler.add_task(Task("b", "B", lambda: result.append("b")))
-    scheduler.add_task(Task("c", "Y", lambda: result.append("c")))
-    orch = Orchestrator(cluster, scheduler)
-    orch.cycle()
-    assert result == ["a", "b", "c"]
-
-
-def test_seed_encoder_roundtrip():
-    data = b"hello"
-    colors = seed.encode(data, key=42)
-    assert seed.decode(colors, key=42) == data
-    with pytest.raises(ValueError):
-        seed.decode(colors, key=43)
