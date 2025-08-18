@@ -9,6 +9,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from typing import Dict, List, Tuple, Any
+import asyncio
+
+from ..task import Task
+from ..node import Node
 import math
 import threading
 import time
@@ -349,6 +353,29 @@ class RBYConsciousnessOrchestrator:
         consciousness = (rby_balance * 0.4 + focal_factor * 0.3 + consciousness_weight * 0.3)
         
         return min(1.0, max(0.0, consciousness))
+
+
+async def create_task(node: Node, name: str | None = None) -> Task:
+    """Build an asynchronous RBY processing task for a node.
+
+    The factory instantiates a :class:`RBYQuantumProcessor` and prepares a
+    callable action that performs a single processing step when executed. The
+    returned :class:`~aios_io.task.Task` can be scheduled like any other task
+    in the system.
+    """
+
+    processor = RBYQuantumProcessor()
+    initial = RBYState(0.33, 0.33, 0.34)
+
+    async def _run() -> None:
+        data = torch.randn(1, processor.dimensions)
+        processor.process_rby_state(data, initial)
+
+    def action() -> None:
+        asyncio.run(_run())
+
+    task_name = name or f"rby_core_{node.node_id}"
+    return Task(task_name, "R", action)
 
 
 def test_rby_system():
