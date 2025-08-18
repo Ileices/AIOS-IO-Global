@@ -2,8 +2,10 @@
 
 import argparse
 import asyncio
+import json
 
 from .cluster import Cluster
+from .digest_aggregator import DigestAggregator
 from .node import Node
 from .scheduler import Scheduler
 from .task import Task
@@ -118,12 +120,34 @@ def main(argv=None) -> None:
                 cluster.schedule_task(task)
         cluster.run_all()
     elif args.command == "show-digest":
-        for node in cluster.nodes.values():
-            print(f"== {node.node_id} ==")
-            for entry in node.digest.read():
+        # merge node logs into a cluster-level digest
+        aggregator = DigestAggregator()
+        node_paths = [n.digest.path for n in cluster.nodes.values()]
+        aggregator.merge(node_paths)
+
+        entries = []
+        if aggregator.cluster_log.exists():
+            lines = aggregator.cluster_log.read_text(encoding="utf-8").splitlines()
+            entries = [json.loads(line) for line in lines if line]
+
+        per_node: dict[str, list] = {}
+        for entry in entries:
+            node_id = entry.get("node", "unknown")
+            per_node.setdefault(node_id, []).append(entry)
+
+        print("Summary:")
+        for node_id, node_entries in per_node.items():
+            print(f"{node_id}: {len(node_entries)} entries")
+
+        print("\nDetails:")
+        for node_id, node_entries in per_node.items():
+            print(f"== {node_id} ==")
+            for entry in node_entries:
                 ts = entry.get("timestamp")
                 task = entry.get("task")
-                print(f"{ts}: {task}")
+                status = entry.get("status")
+                suffix = f" ({status})" if status else ""
+                print(f"{ts}: {task}{suffix}")
 
 
 if __name__ == "__main__":
