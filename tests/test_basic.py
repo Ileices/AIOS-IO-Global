@@ -7,6 +7,8 @@ from aios_io.cluster import Cluster
 from aios_io.node import Node
 from aios_io.task import Task
 from aios_io.scheduler import Scheduler
+from aios_io.backends import JSONFileBackend
+import json
 
 
 def test_cluster_add_and_list():
@@ -49,5 +51,36 @@ def test_node_heartbeat_and_usage():
     node.heartbeat()
     assert node.is_alive()
     usage = node.resource_usage()
-    assert "cpu" in usage and "memory" in usage
+    assert "cpu" in usage and "memory" in usage and "gpu" in usage
+
+
+def test_scheduler_weighted_priority(tmp_path):
+    backend = JSONFileBackend(tmp_path / "state.json")
+    sched = Scheduler(backend=backend)
+    low_weight = Task("t1", "R", lambda: None, priority=5, weight=1)
+    high_weight = Task("t2", "R", lambda: None, priority=5, weight=2)
+    sched.add_task(low_weight)
+    sched.add_task(high_weight)
+    assert sched.run_next("R") is high_weight
+
+
+def test_scheduler_serialization(tmp_path):
+    backend = JSONFileBackend(tmp_path / "state.json")
+    sched = Scheduler(backend=backend)
+    task = Task("persist", "R", lambda: None, priority=3, metadata={"x": 1})
+    sched.add_task(task)
+    sched.run_next("R")
+    data = json.loads((tmp_path / "state.json").read_text())
+    assert data["history"][0]["name"] == "persist"
+
+
+def test_cluster_schedule_with_resources():
+    cluster = Cluster("c2")
+    n1 = Node("n1", cpu_cores=2, gpu_cores=0, ram_gb=4)
+    n2 = Node("n2", cpu_cores=4, gpu_cores=1, ram_gb=8)
+    cluster.add_node(n1)
+    cluster.add_node(n2)
+    task = Task("gpu", "R", lambda: None, metadata={"resources": {"gpu": 1}})
+    cluster.schedule_task(task)
+    assert task in n2.tasks
 
