@@ -38,6 +38,9 @@ def build_parser() -> argparse.ArgumentParser:
     demo = sub.add_parser("demo", help="Run a demo cycle")
     demo.add_argument("cluster")
 
+    orch = sub.add_parser("orchestrate", help="Run tasks through the orchestrator")
+    orch.add_argument("cluster")
+
     reg = sub.add_parser("register-peer", help="Register a PulseNet peer")
     reg.add_argument("name")
     reg.add_argument("host")
@@ -71,7 +74,7 @@ def main(argv=None) -> None:
         print(f"Registered peer {args.name} at {args.host}:{args.port}")
         return
     elif args.command == "start-server":
-        pulsenet.register_handler("message", lambda m: print(f"received: {m}"))
+
         asyncio.run(pulsenet.start_server(args.host, args.port))
         return
     elif args.command == "send":
@@ -117,6 +120,16 @@ def main(argv=None) -> None:
             if task:
                 cluster.schedule_task(task)
         cluster.run_all()
+    elif args.command == "orchestrate":
+        cluster.add_node(Node("n1", 4))
+        cluster.add_node(Node("n2", 2))
+        scheduler = Scheduler()
+        scheduler.add_task(Task("collect", "R", lambda: print("collecting data")))
+        scheduler.add_task(Task("train", "B", lambda: print("training model")))
+        scheduler.add_task(Task("deploy", "Y", lambda: print("deploying service")))
+        from .orchestrator import Orchestrator
+
+        Orchestrator(cluster, scheduler, pulsenet).cycle()
     elif args.command == "show-digest":
         for node in cluster.nodes.values():
             print(f"== {node.node_id} ==")

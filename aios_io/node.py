@@ -52,11 +52,7 @@ class Node:
             self.digest.log(entry)
             self.heartbeat()
 
-            self.digest.log(
-                {"node": self.node_id, "task": task.name, "timestamp": time.time()}
-            )
-
-        self.tasks.clear()
+            self.tasks.clear()
 
     def cancel_task(self, name: str) -> bool:
         """Cancel a pending task by name."""
