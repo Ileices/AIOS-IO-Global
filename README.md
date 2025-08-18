@@ -9,7 +9,7 @@ This repository contains an experimental prototype for the **AIOS IO** project. 
 - Asynchronous PulseNet message bus with peer registry and broadcast
 - Basic command-line interface
 - Digest logging for executed tasks including resource metrics
-- Toy RBY color encoder for data
+- Configurable, reversible RBY color encoder for data
 - Task scheduling demo showing R/B/Y phases
 - Experimental machine-learning algorithms under `aios_io.ml`
 - Nodes track CPU and memory usage with heartbeat monitoring
@@ -40,10 +40,12 @@ python -m aios_io.cli send local "hello"
 # show digest logs for a cluster (JSON lines with timestamps)
 python -m aios_io.cli show-digest mycluster
 
-# encode a string into RBY colors
+# encode a string into RBY colors with a key
 python - <<'PY'
-from aios_io.seed import encode
-print(encode(b"hello"))
+from aios_io.seed import encode, decode
+colors = encode(b"hello", key=42)
+print(colors)
+print(decode(colors, key=42))
 PY
 ```
 

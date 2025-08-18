@@ -8,6 +8,8 @@ from aios_io.node import Node
 from aios_io.task import Task
 from aios_io.scheduler import Scheduler
 from aios_io.orchestrator import Orchestrator
+from aios_io import seed
+import pytest
 
 
 def test_cluster_add_and_list():
@@ -64,3 +66,11 @@ def test_orchestrator_runs_cycle():
     orch = Orchestrator(cluster, scheduler)
     orch.cycle()
     assert result == ["a", "b", "c"]
+
+
+def test_seed_encoder_roundtrip():
+    data = b"hello"
+    colors = seed.encode(data, key=42)
+    assert seed.decode(colors, key=42) == data
+    with pytest.raises(ValueError):
+        seed.decode(colors, key=43)
