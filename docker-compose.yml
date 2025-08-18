@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+  aios:
+    build: .
+    image: aios-io-global
+    deploy:
+      replicas: 3
+    command: ["python", "-m", "aios_io.cli"]
