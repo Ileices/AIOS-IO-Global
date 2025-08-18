@@ -2,8 +2,10 @@
 
 import argparse
 import asyncio
+import json
 
 from .cluster import Cluster
+from .digest_aggregator import DigestAggregator
 from .node import Node
 from .scheduler import Scheduler
 from .task import Task
@@ -42,6 +44,13 @@ def build_parser() -> argparse.ArgumentParser:
     reg.add_argument("name")
     reg.add_argument("host")
     reg.add_argument("port", type=int)
+    reg.add_argument("--key", help="Shared key for authentication")
+
+    set_key = sub.add_parser("set-key", help="Set shared key for a peer")
+    set_key.add_argument("name")
+    set_key.add_argument("key")
+
+    peer_status = sub.add_parser("peer-status", help="List registered peers")
 
     start = sub.add_parser("start-server", help="Start a PulseNet server")
     start.add_argument("host")
@@ -50,9 +59,11 @@ def build_parser() -> argparse.ArgumentParser:
     send = sub.add_parser("send", help="Send a message to a peer")
     send.add_argument("name")
     send.add_argument("message")
+    send.add_argument("--type", default="message")
 
     broadcast = sub.add_parser("broadcast", help="Send a message to all peers")
     broadcast.add_argument("message")
+    broadcast.add_argument("--type", default="message")
 
     digest_cmd = sub.add_parser("show-digest", help="Show node digest logs")
     digest_cmd.add_argument("cluster")
@@ -67,18 +78,27 @@ def main(argv=None) -> None:
     pulsenet = PulseNet()
 
     if args.command == "register-peer":
-        pulsenet.register_peer(args.name, args.host, args.port)
+        pulsenet.register_peer(args.name, args.host, args.port, key=args.key)
         print(f"Registered peer {args.name} at {args.host}:{args.port}")
+        return
+    elif args.command == "set-key":
+        pulsenet.set_key(args.name, args.key)
+        print(f"Updated key for peer {args.name}")
+        return
+    elif args.command == "peer-status":
+        for name, info in pulsenet.peer_status().items():
+            key_state = "yes" if info["has_key"] else "no"
+            print(f"{name}: {info['host']}:{info['port']} key:{key_state}")
         return
     elif args.command == "start-server":
         pulsenet.register_handler("message", lambda m: print(f"received: {m}"))
         asyncio.run(pulsenet.start_server(args.host, args.port))
         return
     elif args.command == "send":
-        asyncio.run(pulsenet.send(args.name, "message", args.message))
+        asyncio.run(pulsenet.send(args.name, "message", args.message, msg_type=args.type))
         return
     elif args.command == "broadcast":
-        asyncio.run(pulsenet.broadcast("message", args.message))
+        asyncio.run(pulsenet.broadcast("message", args.message, msg_type=args.type))
         return
 
     if args.command == "load-cluster":
@@ -118,12 +138,34 @@ def main(argv=None) -> None:
                 cluster.schedule_task(task)
         cluster.run_all()
     elif args.command == "show-digest":
-        for node in cluster.nodes.values():
-            print(f"== {node.node_id} ==")
-            for entry in node.digest.read():
+        # merge node logs into a cluster-level digest
+        aggregator = DigestAggregator()
+        node_paths = [n.digest.path for n in cluster.nodes.values()]
+        aggregator.merge(node_paths)
+
+        entries = []
+        if aggregator.cluster_log.exists():
+            lines = aggregator.cluster_log.read_text(encoding="utf-8").splitlines()
+            entries = [json.loads(line) for line in lines if line]
+
+        per_node: dict[str, list] = {}
+        for entry in entries:
+            node_id = entry.get("node", "unknown")
+            per_node.setdefault(node_id, []).append(entry)
+
+        print("Summary:")
+        for node_id, node_entries in per_node.items():
+            print(f"{node_id}: {len(node_entries)} entries")
+
+        print("\nDetails:")
+        for node_id, node_entries in per_node.items():
+            print(f"== {node_id} ==")
+            for entry in node_entries:
                 ts = entry.get("timestamp")
                 task = entry.get("task")
-                print(f"{ts}: {task}")
+                status = entry.get("status")
+                suffix = f" ({status})" if status else ""
+                print(f"{ts}: {task}{suffix}")
 
 
 if __name__ == "__main__":

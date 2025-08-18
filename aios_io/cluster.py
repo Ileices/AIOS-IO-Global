@@ -1,7 +1,7 @@
 """Cluster manager for grouping nodes."""
 from __future__ import annotations
 
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Callable
 
 from .node import Node
 from .task import Task
@@ -23,12 +23,46 @@ class Cluster:
     def list_nodes(self) -> List[str]:
         return [node.info() for node in self.nodes.values()]
 
-    def schedule_task(self, task: Task) -> None:
-        """Assign a task to the least-loaded node."""
+    def schedule_task(
+        self, task: Task, selector: Callable[[List[Node], Task], Node] | None = None
+    ) -> None:
+        """Assign a task to an appropriate node.
+
+        If ``selector`` is provided it will be used to choose the node.
+        Otherwise nodes are filtered based on resource requirements in
+        ``task.metadata['resources']`` and the least loaded node is chosen
+        using current CPU/GPU/memory usage.
+        """
+
         if not self.nodes:
             raise RuntimeError("Cluster has no nodes")
-        # choose node with fewest tasks
-        node = min(self.nodes.values(), key=lambda n: len(n.tasks))
+
+        nodes = list(self.nodes.values())
+        if selector is not None:
+            node = selector(nodes, task)
+        else:
+            req = task.metadata.get("resources", {})
+            candidates = [
+                n
+                for n in nodes
+                if n.cpu_cores >= req.get("cpu", 0)
+                and n.gpu_cores >= req.get("gpu", 0)
+                and n.ram_gb >= req.get("ram", 0)
+            ]
+            if not candidates:
+                raise RuntimeError("No suitable nodes for task requirements")
+
+            def score(n: Node) -> tuple[float, float, float, int]:
+                usage = n.resource_usage()
+                return (
+                    usage.get("cpu", 0.0),
+                    usage.get("gpu", 0.0),
+                    usage.get("memory", 0.0),
+                    len(n.tasks),
+                )
+
+            node = min(candidates, key=score)
+
         node.assign_task(task)
 
     def run_all(self) -> None:

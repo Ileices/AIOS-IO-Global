@@ -1,4 +1,5 @@
 import sys
+import asyncio
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -9,7 +10,6 @@ from aios_io.cluster import Cluster
 from aios_io.node import Node
 from aios_io.task import Task
 from aios_io.scheduler import Scheduler
-from aios_io.ml import create_task, encode_and_enqueue, trigger_ml_tasks
 
 
 def test_cluster_add_and_list():
@@ -52,7 +52,9 @@ def test_node_heartbeat_and_usage():
     node.heartbeat()
     assert node.is_alive()
     usage = node.resource_usage()
-    assert "cpu" in usage and "memory" in usage
+    assert "cpu" in usage and "memory" in usage and "gpu" in usage
+
+
 
 
 def test_rby_task_factory_sched():
