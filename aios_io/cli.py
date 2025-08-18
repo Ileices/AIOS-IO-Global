@@ -71,7 +71,10 @@ def main(argv=None) -> None:
         print(f"Registered peer {args.name} at {args.host}:{args.port}")
         return
     elif args.command == "start-server":
-        pulsenet.register_handler("message", lambda m: print(f"received: {m}"))
+        async def handler(m: str) -> None:
+            print(f"received: {m}")
+
+        pulsenet.register_handler("message", handler)
         asyncio.run(pulsenet.start_server(args.host, args.port))
         return
     elif args.command == "send":
@@ -114,7 +117,7 @@ def main(argv=None) -> None:
         # schedule tasks onto nodes and run them
         for phase in ["R", "B", "Y"]:
             task = scheduler.run_next(phase)
-            if task:
+            if isinstance(task, Task):
                 cluster.schedule_task(task)
         cluster.run_all()
     elif args.command == "show-digest":
@@ -122,8 +125,8 @@ def main(argv=None) -> None:
             print(f"== {node.node_id} ==")
             for entry in node.digest.read():
                 ts = entry.get("timestamp")
-                task = entry.get("task")
-                print(f"{ts}: {task}")
+                task_name = entry.get("task")
+                print(f"{ts}: {task_name}")
 
 
 if __name__ == "__main__":

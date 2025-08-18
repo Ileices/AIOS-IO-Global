@@ -122,10 +122,10 @@ class Node:
     def from_dict(cls, data: Dict[str, Any]) -> "Node":
         """Create a Node from a dictionary."""
         return cls(
-            data["node_id"],
-            data.get("cpu_cores", 0),
-            data.get("gpu_cores", 0),
-            data.get("ram_gb", 0),
-            data.get("metadata", {}),
-            data.get("digest_path"),
+            node_id=data["node_id"],
+            cpu_cores=data.get("cpu_cores", 0),
+            gpu_cores=data.get("gpu_cores", 0),
+            ram_gb=data.get("ram_gb", 0),
+            metadata=data.get("metadata", {}),
+            digest_path=data.get("digest_path"),
         )
