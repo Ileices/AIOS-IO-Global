@@ -139,7 +139,7 @@ class Node:
         return (time.time() - self.last_heartbeat) <= timeout
 
     def resource_usage(self) -> Dict[str, float]:
-        """Estimate current CPU and memory usage as percentages."""
+        """Estimate current CPU, GPU, and memory usage as percentages."""
         load1, _, _ = os.getloadavg()
         cpu_count = os.cpu_count() or 1
         cpu = (load1 / cpu_count) * 100
@@ -147,12 +147,6 @@ class Node:
         mem_total = meminfo.get("MemTotal", 1)
         mem_available = meminfo.get("MemAvailable", meminfo.get("MemFree", 0))
         mem = 100.0 - (mem_available / mem_total * 100.0)
-        gpu = self._gpu_usage()
-        return {
-            "cpu": round(cpu, 2),
-            "memory": round(mem, 2),
-            "gpu": round(gpu, 2),
-        }
 
     @staticmethod
     def _meminfo() -> Dict[str, int]:
