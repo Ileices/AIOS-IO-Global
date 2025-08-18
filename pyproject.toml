@@ -10,7 +10,14 @@ readme = "README.md"
 authors = [{name="AIOS IO"}]
 requires-python = ">=3.10"
 
+dependencies = [
+    "asyncio",
+]
+
 [project.optional-dependencies]
+science = [
+    "numpy",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
