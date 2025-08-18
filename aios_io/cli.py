@@ -42,6 +42,13 @@ def build_parser() -> argparse.ArgumentParser:
     reg.add_argument("name")
     reg.add_argument("host")
     reg.add_argument("port", type=int)
+    reg.add_argument("--key", help="Shared key for authentication")
+
+    set_key = sub.add_parser("set-key", help="Set shared key for a peer")
+    set_key.add_argument("name")
+    set_key.add_argument("key")
+
+    peer_status = sub.add_parser("peer-status", help="List registered peers")
 
     start = sub.add_parser("start-server", help="Start a PulseNet server")
     start.add_argument("host")
@@ -50,9 +57,11 @@ def build_parser() -> argparse.ArgumentParser:
     send = sub.add_parser("send", help="Send a message to a peer")
     send.add_argument("name")
     send.add_argument("message")
+    send.add_argument("--type", default="message")
 
     broadcast = sub.add_parser("broadcast", help="Send a message to all peers")
     broadcast.add_argument("message")
+    broadcast.add_argument("--type", default="message")
 
     digest_cmd = sub.add_parser("show-digest", help="Show node digest logs")
     digest_cmd.add_argument("cluster")
@@ -67,18 +76,27 @@ def main(argv=None) -> None:
     pulsenet = PulseNet()
 
     if args.command == "register-peer":
-        pulsenet.register_peer(args.name, args.host, args.port)
+        pulsenet.register_peer(args.name, args.host, args.port, key=args.key)
         print(f"Registered peer {args.name} at {args.host}:{args.port}")
+        return
+    elif args.command == "set-key":
+        pulsenet.set_key(args.name, args.key)
+        print(f"Updated key for peer {args.name}")
+        return
+    elif args.command == "peer-status":
+        for name, info in pulsenet.peer_status().items():
+            key_state = "yes" if info["has_key"] else "no"
+            print(f"{name}: {info['host']}:{info['port']} key:{key_state}")
         return
     elif args.command == "start-server":
         pulsenet.register_handler("message", lambda m: print(f"received: {m}"))
         asyncio.run(pulsenet.start_server(args.host, args.port))
         return
     elif args.command == "send":
-        asyncio.run(pulsenet.send(args.name, "message", args.message))
+        asyncio.run(pulsenet.send(args.name, "message", args.message, msg_type=args.type))
         return
     elif args.command == "broadcast":
-        asyncio.run(pulsenet.broadcast("message", args.message))
+        asyncio.run(pulsenet.broadcast("message", args.message, msg_type=args.type))
         return
 
     if args.command == "load-cluster":
