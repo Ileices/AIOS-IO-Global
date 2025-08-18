@@ -1,4 +1,5 @@
 import sys
+import asyncio
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -49,5 +50,35 @@ def test_node_heartbeat_and_usage():
     node.heartbeat()
     assert node.is_alive()
     usage = node.resource_usage()
-    assert "cpu" in usage and "memory" in usage
+    assert "cpu" in usage and "memory" in usage and "gpu" in usage
+
+
+def test_cancel_all(tmp_path):
+    digest_file = tmp_path / "cancel.txt"
+    node = Node("n4", 1, digest_path=str(digest_file))
+    node.assign_task(Task("a", "R", lambda: None))
+    node.assign_task(Task("b", "R", lambda: None))
+    asyncio.run(node.cancel_all())
+    assert not node.tasks
+    assert node.task_states["a"] == "cancelled"
+    assert node.task_states["b"] == "cancelled"
+    entries = node.digest.read()
+    statuses = [e.get("status") for e in entries]
+    assert statuses.count("cancelled") == 2
+
+
+def test_restart_and_spike(tmp_path):
+    digest_file = tmp_path / "restart.txt"
+    node = Node("n5", 1, digest_path=str(digest_file))
+    t = Task("job", "R", lambda: None)
+    node.assign_task(t)
+    node.run_tasks()
+    asyncio.run(node.restart_task("job"))
+    # simulate resource spike
+    node.resource_usage = lambda: {"cpu": 95.0, "memory": 95.0, "gpu": 0.0}
+    node.run_tasks()
+    assert node.task_states["job"] == "completed"
+    entries = node.digest.read()
+    assert any(e.get("status") == "restarted" for e in entries)
+    assert any(e.get("event") == "resource_spike" for e in entries)
 

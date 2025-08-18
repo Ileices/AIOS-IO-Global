@@ -2,7 +2,9 @@
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
+import asyncio
 import os
+import subprocess
 import time
 
 from .task import Task
@@ -19,6 +21,8 @@ class Node:
     ram_gb: int = 0
     metadata: Dict[str, str] = field(default_factory=dict)
     tasks: List[Task] = field(default_factory=list)
+    task_states: Dict[str, str] = field(default_factory=dict)
+    task_history: Dict[str, Task] = field(default_factory=dict)
     digest_path: str | None = None
     digest: Digest = field(init=False)
     heartbeat_interval: float = 5.0
@@ -37,20 +41,35 @@ class Node:
     def assign_task(self, task: Task) -> None:
         """Assign a task to this node."""
         self.tasks.append(task)
+        self.task_states[task.name] = "pending"
 
     def run_tasks(self) -> None:
         """Execute and clear all assigned tasks."""
         for task in list(self.tasks):
+            self.task_states[task.name] = "running"
             task.run()
+            self.task_states[task.name] = "completed"
+            self.task_history[task.name] = task
 
+            usage = self.resource_usage()
             entry = {
                 "node": self.node_id,
                 "task": task.name,
                 "timestamp": time.time(),
-                "resource": self.resource_usage(),
+                "resource": usage,
             }
             self.digest.log(entry)
             self.heartbeat()
+
+            if any(usage.get(k, 0) > 90 for k in ("cpu", "memory", "gpu")):
+                self.digest.log(
+                    {
+                        "node": self.node_id,
+                        "timestamp": time.time(),
+                        "event": "resource_spike",
+                        "usage": usage,
+                    }
+                )
 
             self.digest.log(
                 {"node": self.node_id, "task": task.name, "timestamp": time.time()}
@@ -63,6 +82,7 @@ class Node:
         for task in list(self.tasks):
             if task.name == name:
                 self.tasks.remove(task)
+                self.task_states[task.name] = "cancelled"
                 self.digest.log(
                     {
                         "node": self.node_id,
@@ -73,6 +93,41 @@ class Node:
                 )
                 return True
         return False
+
+    async def cancel_all(self) -> None:
+        """Cancel all pending tasks asynchronously."""
+
+        for task in list(self.tasks):
+            self.tasks.remove(task)
+            self.task_states[task.name] = "cancelled"
+            self.digest.log(
+                {
+                    "node": self.node_id,
+                    "task": task.name,
+                    "timestamp": time.time(),
+                    "status": "cancelled",
+                }
+            )
+            await asyncio.sleep(0)
+
+    async def restart_task(self, name: str) -> bool:
+        """Requeue a previously executed task by name."""
+
+        task = self.task_history.get(name)
+        if not task:
+            return False
+        self.tasks.append(task)
+        self.task_states[name] = "restarted"
+        self.digest.log(
+            {
+                "node": self.node_id,
+                "task": name,
+                "timestamp": time.time(),
+                "status": "restarted",
+            }
+        )
+        await asyncio.sleep(0)
+        return True
 
     def heartbeat(self) -> None:
         """Record a heartbeat timestamp."""
@@ -92,7 +147,12 @@ class Node:
         mem_total = meminfo.get("MemTotal", 1)
         mem_available = meminfo.get("MemAvailable", meminfo.get("MemFree", 0))
         mem = 100.0 - (mem_available / mem_total * 100.0)
-        return {"cpu": round(cpu, 2), "memory": round(mem, 2)}
+        gpu = self._gpu_usage()
+        return {
+            "cpu": round(cpu, 2),
+            "memory": round(mem, 2),
+            "gpu": round(gpu, 2),
+        }
 
     @staticmethod
     def _meminfo() -> Dict[str, int]:
@@ -105,6 +165,24 @@ class Node:
         except FileNotFoundError:
             pass
         return info
+
+    @staticmethod
+    def _gpu_usage() -> float:
+        try:
+            output = subprocess.check_output(
+                [
+                    "nvidia-smi",
+                    "--query-gpu=utilization.gpu",
+                    "--format=csv,noheader,nounits",
+                ],
+                encoding="utf-8",
+            )
+            values = [float(v) for v in output.strip().splitlines() if v.strip()]
+            if values:
+                return sum(values) / len(values)
+        except (FileNotFoundError, subprocess.CalledProcessError):
+            pass
+        return 0.0
 
     # New functionality for persistence
     def to_dict(self) -> Dict[str, Any]:
