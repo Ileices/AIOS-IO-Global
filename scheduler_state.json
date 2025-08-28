@@ -1,0 +1,57 @@
+{
+  "queues": {
+    "R": [
+      {
+        "name": "low",
+        "phase": "R",
+        "priority": 10,
+        "weight": 1.0,
+        "metadata": {}
+      }
+    ],
+    "B": [
+      {
+        "name": "train",
+        "phase": "B",
+        "priority": 0,
+        "weight": 1.0,
+        "metadata": {}
+      }
+    ],
+    "Y": [
+      {
+        "name": "deploy",
+        "phase": "Y",
+        "priority": 0,
+        "weight": 1.0,
+        "metadata": {}
+      }
+    ]
+  },
+  "history": [
+    {
+      "name": "t1",
+      "phase": "R",
+      "priority": 0,
+      "weight": 1.0,
+      "metadata": {},
+      "status": "ran"
+    },
+    {
+      "name": "high",
+      "phase": "R",
+      "priority": 1,
+      "weight": 1.0,
+      "metadata": {},
+      "status": "ran"
+    },
+    {
+      "name": "collect",
+      "phase": "R",
+      "priority": 0,
+      "weight": 1.0,
+      "metadata": {},
+      "status": "ran"
+    }
+  ]
+}
